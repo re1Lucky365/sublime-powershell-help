@@ -131,27 +131,29 @@ contexts:
   fenced-code-blocks:
     # Delegate commands to Sublime Text's bundled PowerShell syntax. `embed`
     # guarantees that a closing fence escapes even from an unterminated string.
-    - match: '^(\s*)(```)(?i:powershell|ps1)\s*$'
+    - match: '^(\s*)(```)((?i:powershell|ps1))\s*$'
       captures:
-        2: punctuation.definition.raw.begin.markdown
+        2: comment.punctuation.definition.raw.begin.powershell-help
+        3: comment.language-name.fenced-code.powershell-help
       embed: scope:source.powershell
       embed_scope: source.powershell.embedded.powershell-help
       escape: '^\1```\s*$'
       escape_captures:
-        0: punctuation.definition.raw.end.markdown
-    - match: '^(\s*)(```)(?i:output|console|text)\s*$'
+        0: comment.punctuation.definition.raw.end.powershell-help
+    - match: '^(\s*)(```)((?i:output|console|text))\s*$'
       captures:
-        2: punctuation.definition.raw.begin.markdown
+        2: comment.punctuation.definition.raw.begin.powershell-help
+        3: comment.language-name.fenced-code.powershell-help
       push: fenced-output
     - match: '^(\s*)(```)\s*$'
       captures:
-        2: punctuation.definition.raw.begin.markdown
+        2: comment.punctuation.definition.raw.begin.powershell-help
       push: fenced-output
 
   fenced-output:
     - meta_content_scope: markup.raw.block.output.powershell-help
     - match: '^\1```\s*$'
-      scope: punctuation.definition.raw.end.markdown
+      scope: comment.punctuation.definition.raw.end.powershell-help
       pop: true
 
   example-heading:
@@ -166,40 +168,40 @@ contexts:
   markdown-blocks:
     - match: '^(\s*)(>)(\s*)(\[!)(NOTE|TIP|IMPORTANT|WARNING|CAUTION)(\])'
       captures:
-        2: punctuation.definition.quote.begin.markdown
-        4: punctuation.definition.annotation.begin.powershell-help
+        2: comment.punctuation.definition.quote.begin.powershell-help
+        4: comment.punctuation.definition.annotation.begin.powershell-help
         5: keyword.other.admonition.powershell-help
-        6: punctuation.definition.annotation.end.powershell-help
+        6: comment.punctuation.definition.annotation.end.powershell-help
     - match: '^\s*(>)'
       captures:
-        1: punctuation.definition.quote.begin.markdown
+        1: comment.punctuation.definition.quote.begin.powershell-help
     - match: '^(\s*)([-*+])(\s+)'
       captures:
-        2: punctuation.definition.list_item.markdown
+        2: comment.punctuation.definition.list-item.powershell-help
     # Some formatted hosts use a literal question mark as a paragraph/pager
     # separator when rendering markdown-derived help.
     - match: '^\s*\?\s*$'
-      scope: punctuation.separator.prose.powershell-help
+      scope: comment.punctuation.separator.prose.powershell-help
 
   markdown-inline:
     - match: '(`)([^`\r\n]+)(`)'
       captures:
-        1: punctuation.definition.raw.begin.markdown
-        2: markup.raw.inline.powershell-help
-        3: punctuation.definition.raw.end.markdown
+        1: comment.punctuation.definition.raw.begin.powershell-help
+        2: string.other.code.inline.powershell-help
+        3: comment.punctuation.definition.raw.end.powershell-help
     - match: '(\*\*)([^*\r\n]+)(\*\*)'
       captures:
-        1: punctuation.definition.bold.begin.markdown
+        1: comment.punctuation.definition.bold.begin.powershell-help
         2: markup.bold.powershell-help
-        3: punctuation.definition.bold.end.markdown
+        3: comment.punctuation.definition.bold.end.powershell-help
     - match: '(\[)([^\]\r\n]+)(\])(\()([^\s)]+)(\))'
       captures:
-        1: punctuation.definition.link.begin.markdown
+        1: comment.punctuation.definition.link.begin.powershell-help
         2: string.other.link.title.markdown
-        3: punctuation.definition.link.end.markdown
-        4: punctuation.definition.metadata.begin.markdown
+        3: comment.punctuation.definition.link.end.powershell-help
+        4: comment.punctuation.definition.metadata.begin.powershell-help
         5: markup.underline.link.markdown
-        6: punctuation.definition.metadata.end.markdown
+        6: comment.punctuation.definition.metadata.end.powershell-help
     - match: 'https?://[^\s)>]+'
       scope: markup.underline.link.powershell-help
 
