@@ -1,0 +1,212 @@
+%YAML 1.2
+---
+name: PowerShell Help
+file_extensions:
+  - pshelp
+  - help.txt
+first_line_match: '^\s*(?:NAME|TOPIC)\s*$'
+scope: text.powershell-help
+version: 2
+
+variables:
+  cmdlet: '[A-Za-z]+-[A-Za-z][A-Za-z0-9-]*'
+  parameter: '-{1,2}[A-Za-z][A-Za-z0-9-]*'
+  type_name: '(?:[A-Za-z_][A-Za-z0-9_]*\.)*[A-Za-z_][A-Za-z0-9_]*'
+
+contexts:
+  main:
+    # These sections contain regular enough data to warrant their own rules.
+    - match: '^(SYNTAX)\s*$'
+      captures:
+        1: markup.heading.1.powershell-help
+      push: syntax-section
+    - match: '^(PARAMETERS)\s*$'
+      captures:
+        1: markup.heading.1.powershell-help
+      push: parameters-section
+    - match: '^(INPUTS|OUTPUTS)\s*$'
+      captures:
+        1: markup.heading.1.powershell-help
+      push: type-list-section
+    - match: '^(RELATED LINKS)\s*$'
+      captures:
+        1: markup.heading.1.powershell-help
+      push: related-links-section
+    - include: section-heading
+    - include: body
+
+  section-heading:
+    # Get-Help emits its top-level headings unindented and in upper case.
+    - match: '^[A-Z][A-Z ]*[A-Z]\s*$|^[A-Z]\s*$'
+      scope: markup.heading.1.powershell-help
+
+  section-end:
+    # Pop before consuming the next heading, allowing `main` to choose the
+    # appropriate context for that section.
+    - match: '(?=^[A-Z][A-Z ]*[A-Z]\s*$|^[A-Z]\s*$)'
+      pop: true
+
+  syntax-section:
+    - meta_scope: meta.section.syntax.powershell-help
+    - include: section-end
+    - match: '^(\s{4})({{cmdlet}})'
+      captures:
+        2: support.function.command.powershell-help
+    - include: signature-tokens
+
+  signature-tokens:
+    - match: '(<)(CommonParameters)(>)'
+      captures:
+        1: punctuation.definition.type.begin.powershell-help
+        2: constant.language.common-parameters.powershell-help
+        3: punctuation.definition.type.end.powershell-help
+    - match: '(<)({{type_name}})(\[\])?(>)'
+      captures:
+        1: punctuation.definition.type.begin.powershell-help
+        2: storage.type.powershell-help
+        3: storage.modifier.array.powershell-help
+        4: punctuation.definition.type.end.powershell-help
+    - match: '(?<![A-Za-z0-9-]){{parameter}}(?![A-Za-z0-9-])'
+      scope: variable.parameter.powershell-help
+    - match: '\['
+      scope: punctuation.section.optional.begin.powershell-help
+    - match: '\]'
+      scope: punctuation.section.optional.end.powershell-help
+    - match: ','
+      scope: punctuation.separator.sequence.powershell-help
+
+  parameters-section:
+    - meta_scope: meta.section.parameters.powershell-help
+    - include: section-end
+    # Parameter declaration lines are indented exactly one level.
+    - match: '^(\s{4})({{parameter}})'
+      captures:
+        2: variable.parameter.powershell-help
+    - match: '^(\s{4})(<)(CommonParameters)(>)'
+      captures:
+        2: punctuation.definition.type.begin.powershell-help
+        3: constant.language.common-parameters.powershell-help
+        4: punctuation.definition.type.end.powershell-help
+    # Boolean metadata is common enough to receive a more specific scope.
+    - match: '^(\s{8})(Required\?|Accept pipeline input\?|Accept wildcard characters\?)(\s{2,})(true|false)\s*$'
+      captures:
+        2: variable.other.member.metadata.powershell-help
+        4: constant.language.boolean.powershell-help
+    - match: '^(\s{8})(Position\?|Default value|Aliases)(\s{2,})(.*)$'
+      captures:
+        2: variable.other.member.metadata.powershell-help
+        4: constant.language.metadata-value.powershell-help
+    - include: signature-tokens
+    - include: body
+
+  type-list-section:
+    - meta_scope: meta.section.type-list.powershell-help
+    - include: section-end
+    - match: '^(\s{4})({{type_name}})(\[\])?\s*$'
+      captures:
+        2: storage.type.powershell-help
+        3: storage.modifier.array.powershell-help
+    - include: body
+
+  related-links-section:
+    - meta_scope: meta.section.related-links.powershell-help
+    - include: section-end
+    - match: '^(\s{4})(.+?)(\s+)(https?://\S+)\s*$'
+      captures:
+        2: support.function.reference.powershell-help
+        4: markup.underline.link.powershell-help
+    - match: '^(\s{4})({{cmdlet}})(\s+)(\S+\.md)\s*$'
+      captures:
+        2: support.function.command.powershell-help
+        4: string.unquoted.path.powershell-help
+    - include: body
+
+  body:
+    - include: fenced-code-blocks
+    - include: example-heading
+    - include: markdown-blocks
+    - include: markdown-inline
+    - include: generated-references
+
+  fenced-code-blocks:
+    # Delegate commands to Sublime Text's bundled PowerShell syntax. `embed`
+    # guarantees that a closing fence escapes even from an unterminated string.
+    - match: '^(\s*)(```)(?i:powershell|ps1)\s*$'
+      captures:
+        2: punctuation.definition.raw.begin.markdown
+      embed: scope:source.powershell
+      embed_scope: source.powershell.embedded.powershell-help
+      escape: '^\1```\s*$'
+      escape_captures:
+        0: punctuation.definition.raw.end.markdown
+    - match: '^(\s*)(```)(?i:output|console|text)\s*$'
+      captures:
+        2: punctuation.definition.raw.begin.markdown
+      push: fenced-output
+    - match: '^(\s*)(```)\s*$'
+      captures:
+        2: punctuation.definition.raw.begin.markdown
+      push: fenced-output
+
+  fenced-output:
+    - meta_content_scope: markup.raw.block.output.powershell-help
+    - match: '^\1```\s*$'
+      scope: punctuation.definition.raw.end.markdown
+      pop: true
+
+  example-heading:
+    - match: '^(\s*)(-+)(\s+)(Example)(\s+)(\d+)(:\s+)(.*?)(\s+)(-+)\s*$'
+      captures:
+        2: punctuation.definition.heading.begin.powershell-help
+        4: markup.heading.2.powershell-help
+        6: constant.numeric.example-number.powershell-help
+        8: entity.name.section.example.powershell-help
+        10: punctuation.definition.heading.end.powershell-help
+
+  markdown-blocks:
+    - match: '^(\s*)(>)(\s*)(\[!)(NOTE|TIP|IMPORTANT|WARNING|CAUTION)(\])'
+      captures:
+        2: punctuation.definition.quote.begin.markdown
+        4: punctuation.definition.annotation.begin.powershell-help
+        5: keyword.other.admonition.powershell-help
+        6: punctuation.definition.annotation.end.powershell-help
+    - match: '^\s*(>)'
+      captures:
+        1: punctuation.definition.quote.begin.markdown
+    - match: '^(\s*)([-*+])(\s+)'
+      captures:
+        2: punctuation.definition.list_item.markdown
+    # Some formatted hosts use a literal question mark as a paragraph/pager
+    # separator when rendering markdown-derived help.
+    - match: '^\s*\?\s*$'
+      scope: punctuation.separator.prose.powershell-help
+
+  markdown-inline:
+    - match: '(`)([^`\r\n]+)(`)'
+      captures:
+        1: punctuation.definition.raw.begin.markdown
+        2: markup.raw.inline.powershell-help
+        3: punctuation.definition.raw.end.markdown
+    - match: '(\*\*)([^*\r\n]+)(\*\*)'
+      captures:
+        1: punctuation.definition.bold.begin.markdown
+        2: markup.bold.powershell-help
+        3: punctuation.definition.bold.end.markdown
+    - match: '(\[)([^\]\r\n]+)(\])(\()([^\s)]+)(\))'
+      captures:
+        1: punctuation.definition.link.begin.markdown
+        2: string.other.link.title.markdown
+        3: punctuation.definition.link.end.markdown
+        4: punctuation.definition.metadata.begin.markdown
+        5: markup.underline.link.markdown
+        6: punctuation.definition.metadata.end.markdown
+    - match: 'https?://[^\s)>]+'
+      scope: markup.underline.link.powershell-help
+
+  generated-references:
+    - match: '^(\s{4})({{cmdlet}})\s*$'
+      captures:
+        2: support.function.command.powershell-help
+    - match: '(?<![A-Za-z0-9-]){{cmdlet}}(?![A-Za-z0-9-])'
+      scope: support.function.command.powershell-help
+...
